@@ -20,6 +20,16 @@ public class Ingredient implements Parcelable {
         ingredient = in.readString();
     }
 
+    public Ingredient(Double quantity, String measure, String ingredient) {
+        this.quantity = quantity;
+        this.measure = measure;
+        this.ingredient = ingredient;
+    }
+
+    static Ingredient mockObject() {
+        return new Ingredient(Double.valueOf(2.5d), "G", "salt");
+    }
+
     public static final Creator<Ingredient> CREATOR = new Creator<Ingredient>() {
         @Override
         public Ingredient createFromParcel(Parcel in) {

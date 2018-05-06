@@ -8,4 +8,19 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="Progress.Dialog.Theme" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:background">@color/background</item>
+        <item name="android:colorAccent">@color/white</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="TitleTextStyle" parent="AppTheme">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="generalnotitle" parent="Theme.AppCompat.Light" >
+        <item name="android:windowNoTitle">true</item>   <!-- //this -->
+    </style>
+
 </resources>

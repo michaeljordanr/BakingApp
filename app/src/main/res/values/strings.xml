@@ -2,7 +2,21 @@
     <string name="app_name">Baking</string>
 
     <string name="recipe_img_content">Recipe type item</string>
+    
+    <string name="ingredients">Ingredients:</string>
+    <string name="steps">Steps:</string>
+    <string name="step_title">Step %1$s</string>
+    <string name="next_step">Next</string>
+    <string name="previous_step">Previous</string>
+    <string name="description">Description</string>
 
     <string name="loading">Loading</string>
     <string name="msg_loading">Downloading data…</string>
+
+    <string name="error_internet">Internet not available. Check your internet connectivity and try again</string>
+    <string name="info">Info</string>
+    <string name="ok">OK</string>
+
+    <string name="appwidget_text">RECIPES</string>
+    <string name="add_widget">Add widget</string>
 </resources>

@@ -4,6 +4,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
 public class Step implements Parcelable {
 
@@ -13,8 +14,10 @@ public class Step implements Parcelable {
     private String shortDescription;
     @Expose
     private String description;
+    @SerializedName("videoURL")
     @Expose
     private String videoUrl;
+    @SerializedName("thumbnailURL")
     @Expose
     private String thumbnailUrl;
 
@@ -24,6 +27,22 @@ public class Step implements Parcelable {
         description = in.readString();
         videoUrl = in.readString();
         thumbnailUrl = in.readString();
+    }
+
+    public Step(Integer id, String shortDescription, String description, String videoURL, String thumbnailURL) {
+        this.id = id;
+        this.shortDescription = shortDescription;
+        this.description = description;
+        this.videoUrl = videoURL;
+        this.thumbnailUrl = thumbnailURL;
+    }
+
+    static Step mockObject() {
+        return new Step(Integer.valueOf(1),
+                "Short description",
+                "Description",
+                "https://d17h27t6h515a5.cloudfront.net/topher/2017/April/58ffd974_-intro-creampie/-intro-creampie.mp4",
+                "");
     }
 
     public static final Creator<Step> CREATOR = new Creator<Step>() {

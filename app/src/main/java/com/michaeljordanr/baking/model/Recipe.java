@@ -3,6 +3,7 @@ package com.michaeljordanr.baking.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Recipe implements Parcelable {
@@ -21,6 +22,27 @@ public class Recipe implements Parcelable {
         ingredients = in.createTypedArrayList(Ingredient.CREATOR);
         servings = in.readInt();
         image = in.readString();
+    }
+
+    public Recipe(Integer id, String name, List<Ingredient> ingredients, List<Step> steps, Integer servings, String image) {
+        this.id = id;
+        this.name = name;
+        this.ingredients = ingredients;
+        this.steps = steps;
+        this.servings = servings;
+        this.image = image;
+    }
+
+    public static Recipe mockObject() {
+        List<Step> stepList = new ArrayList();
+        stepList.add(Step.mockObject());
+        stepList.add(Step.mockObject());
+        stepList.add(Step.mockObject());
+        List<Ingredient> ingredientsList = new ArrayList();
+        ingredientsList.add(Ingredient.mockObject());
+        ingredientsList.add(Ingredient.mockObject());
+        ingredientsList.add(Ingredient.mockObject());
+        return new Recipe(Integer.valueOf(1), "Nutella Pie", ingredientsList, stepList, Integer.valueOf(8), "http://www.singforyoursupperblog.com/wp271/wp-content/uploads/2010/05/nutellapie3-2.jpg");
     }
 
     public static final Creator<Recipe> CREATOR = new Creator<Recipe>() {

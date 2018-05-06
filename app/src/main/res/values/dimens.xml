@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="title_margin_bottom">8dp</dimen>
+
+    <dimen name="material_0x">4dp</dimen>
+    <dimen name="material_1x">8dp</dimen>
+    <dimen name="material_2x">16dp</dimen>
+    <dimen name="material_3x">32dp</dimen>
+    <dimen name="material_4x">64dp</dimen>
+    <dimen name="material_5x">128dp</dimen>
+
+    <dimen name="progress_width">48dp</dimen>
+    <dimen name="progress_height">48dp</dimen>
+
+    <dimen name="widget_margin">8dp</dimen>
+</resources>

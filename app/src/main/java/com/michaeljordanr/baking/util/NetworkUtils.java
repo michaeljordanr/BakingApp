@@ -1,9 +1,13 @@
-package com.michaeljordanr.baking.ultil;
+package com.michaeljordanr.baking.util;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.support.v7.app.AlertDialog;
+
+import com.michaeljordanr.baking.R;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -48,6 +52,19 @@ public class NetworkUtils {
         NetworkInfo activeNetworkInfo = connectivityManager != null ? connectivityManager.getActiveNetworkInfo() : null;
 
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    public static void showDialogErrorNetwork(Context context){
+        AlertDialog.Builder builder;
+        builder = new AlertDialog.Builder(context, R.style.Progress_Dialog_Theme);
+        builder.setTitle(R.string.info)
+                .setMessage(R.string.error_internet)
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                })
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
     }
 
 }
