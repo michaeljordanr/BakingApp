@@ -10,5 +10,6 @@ public class Constants {
     public static final String RECIPE_ARG = "item_recipe";
     public static final String STEP_LIST_ARG = "step_list";
     public static final String STEP_LIST_POSITION_ARG = "step_list_position";
-    public static final String TWO_PANE_ARG = "two_pane";
+    public static final String STEP_ARG = "step_arg";
+    public static final String IS_TABLET_ARG = "two_pane";
 }

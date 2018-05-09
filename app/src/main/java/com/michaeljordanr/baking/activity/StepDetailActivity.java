@@ -22,6 +22,7 @@ public class StepDetailActivity extends AppCompatActivity implements ToolbarCont
 
     private int mPositionSelected;
     private ArrayList<Step> mStepList;
+    private boolean mIsTablet;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -56,6 +57,8 @@ public class StepDetailActivity extends AppCompatActivity implements ToolbarCont
             getSupportActionBar().setTitle(getResources().getString(R.string.step_title,
                     mStepList.get(mPositionSelected).getId()));
         }
+
+        mIsTablet = getResources().getBoolean(R.bool.isTablet);
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -68,8 +71,10 @@ public class StepDetailActivity extends AppCompatActivity implements ToolbarCont
 
     @Override
     public void setTitle(String title) {
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle(title);
+        if(!mIsTablet) {
+            if (getSupportActionBar() != null) {
+                getSupportActionBar().setTitle(title);
+            }
         }
     }
 }

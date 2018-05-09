@@ -10,6 +10,7 @@ import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.exoplayer2.C;
@@ -29,6 +30,7 @@ import com.michaeljordanr.baking.R;
 import com.michaeljordanr.baking.interfaces.ToolbarControlListener;
 import com.michaeljordanr.baking.model.Step;
 import com.michaeljordanr.baking.util.Constants;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +45,7 @@ public class StepDetailFragment extends Fragment {
 
     private static String STATE_RESUME_WINDOW = "state_resume";
     private static String STATE_RESUME_POSITION = "state_position";
+    private static String PLAY_WHEN_READY = "play_when_ready";
 
     private int mResumeWindow;
     private long mResumePosition;
@@ -66,17 +69,23 @@ public class StepDetailFragment extends Fragment {
     PlayerView mPlayerView;
     @BindView(R.id.cv_description)
     CardView mDescriptionCardView;
+    @BindView(R.id.iv_thumbnail)
+    ImageView mThumbnailImageView;
 
     private Unbinder unbinder;
-    private boolean mTwoPane;
+    private boolean mIsTablet;
+    private boolean mHasVideo;
+    private boolean mPlayWhenReady;
+
+    private Step mStep;
 
     public static StepDetailFragment newInstance(ArrayList<Step> stepList, int position,
-                                                 boolean twoPane){
+                                                 boolean isTablet){
         StepDetailFragment fragment = new StepDetailFragment();
         Bundle args = new Bundle();
         args.putParcelableArrayList(Constants.STEP_LIST_ARG, stepList);
         args.putInt(Constants.STEP_LIST_POSITION_ARG, position);
-        args.putBoolean(Constants.TWO_PANE_ARG, twoPane);
+        args.putBoolean(Constants.IS_TABLET_ARG, isTablet);
         fragment.setArguments(args);
         return fragment;
     }
@@ -84,11 +93,13 @@ public class StepDetailFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        try {
-            mToolbarCallback = (ToolbarControlListener) context;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
-                    + " must implement ToolbarControlListener");
+        if(!getResources().getBoolean(R.bool.isTablet)) {
+            try {
+                mToolbarCallback = (ToolbarControlListener) context;
+            } catch (ClassCastException e) {
+                throw new ClassCastException(context.toString()
+                        + " must implement ToolbarControlListener");
+            }
         }
 
     }
@@ -99,7 +110,7 @@ public class StepDetailFragment extends Fragment {
         if(getArguments() != null){
             mStepList = getArguments().getParcelableArrayList(Constants.STEP_LIST_ARG);
             mPositionSelected = getArguments().getInt(Constants.STEP_LIST_POSITION_ARG);
-            mTwoPane = getArguments().getBoolean(Constants.TWO_PANE_ARG);
+            mIsTablet = getArguments().getBoolean(Constants.IS_TABLET_ARG);
         }
     }
 
@@ -111,7 +122,14 @@ public class StepDetailFragment extends Fragment {
         unbinder = ButterKnife.bind(this, view);
         setRetainInstance(true);
 
-        if(mTwoPane){
+        if (savedInstanceState != null) {
+            mResumeWindow = savedInstanceState.getInt(STATE_RESUME_WINDOW, mResumeWindow);
+            mResumePosition = savedInstanceState.getLong(STATE_RESUME_POSITION, mResumePosition);
+            mStep = savedInstanceState.getParcelable(Constants.STEP_ARG);
+            mPlayWhenReady = savedInstanceState.getBoolean(PLAY_WHEN_READY, mExoPlayer.getPlayWhenReady());
+        }
+
+        if(mIsTablet){
             nextStepTextView.setVisibility(View.GONE);
             previousStepTextView.setVisibility(View.GONE);
         }
@@ -126,12 +144,14 @@ public class StepDetailFragment extends Fragment {
     }
 
     private void setupView(){
-        Step step = mStepList.get(mPositionSelected);
+        mStep = mStepList.get(mPositionSelected);
 
-        mToolbarCallback.setTitle(getResources().getString(R.string.step_title, step.getId()));
+        if(!mIsTablet) {
+            mToolbarCallback.setTitle(getResources().getString(R.string.step_title, String.valueOf(mStep.getId())));
+        }
 
-        descriptionTextView.setText(step.getDescription());
-        if(!mTwoPane) {
+        descriptionTextView.setText(mStep.getDescription());
+        if(!mIsTablet) {
             if (!(previousStepTextView == null || nextStepTextView == null)) {
                 previousStepTextView
                         .setVisibility(mPositionSelected == 0 ? View.INVISIBLE : View.VISIBLE);
@@ -140,19 +160,27 @@ public class StepDetailFragment extends Fragment {
             }
         }
 
+        if(mStep.getThumbnailUrl() != null && !mStep.getThumbnailUrl().isEmpty()){
+            Picasso.with(getContext()).
+                    load(mStep.getThumbnailUrl())
+                    .into(mThumbnailImageView);
+        }
+
         int cvVisibility = getResources().getInteger(R.integer.cv_description_visibility);
-        if(step.getVideoUrl() == null || step.getVideoUrl().isEmpty()){
+        if(mStep.getVideoUrl() == null || mStep.getVideoUrl().isEmpty()){
+            mHasVideo = true;
             mPlayerView.setVisibility(View.GONE);
             mDescriptionCardView.setVisibility(View.VISIBLE);
         }else {
+            mHasVideo = false;
             mDescriptionCardView.setVisibility(cvVisibility == View.VISIBLE ? View.VISIBLE : View.GONE);
             mPlayerView.setVisibility(View.VISIBLE);
-            startPlayer(step.getVideoUrl());
+            startPlayer();
         }
 
     }
 
-    private void startPlayer(String videoURL) {
+    private void startPlayer() {
         mExoPlayer = ExoPlayerFactory.newSimpleInstance(getActivity(), new DefaultTrackSelector());
 
         DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
@@ -160,10 +188,10 @@ public class StepDetailFragment extends Fragment {
                 Util.getUserAgent(getContext(), getString(R.string.app_name)), bandwidthMeter);
 
         mMediaSource = new ExtractorMediaSource.Factory(dataSourceFactory)
-                .createMediaSource(Uri.parse(videoURL));
+                .createMediaSource(Uri.parse(mStep.getVideoUrl()));
 
         mExoPlayer.prepare(mMediaSource);
-        mExoPlayer.setPlayWhenReady(true);
+        mExoPlayer.setPlayWhenReady(mPlayWhenReady);
         mPlayerView.setPlayer(mExoPlayer);
 
         mExoPlayer.addListener(new ExoPlayer.DefaultEventListener() {
@@ -194,10 +222,13 @@ public class StepDetailFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if(mPlayerView == null){
-            setupView();
-        }else {
-            resumePlayer();
+        if(!mIsTablet) {
+            if (mPlayerView == null) {
+                setupView();
+            } else {
+                startPlayer();
+                resumePlayer();
+            }
         }
     }
 
@@ -219,17 +250,22 @@ public class StepDetailFragment extends Fragment {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        outState.putInt(STATE_RESUME_WINDOW, mResumeWindow);
-        outState.putLong(STATE_RESUME_POSITION, mResumePosition);
+        Bundle bundle = new Bundle();
+        bundle.putInt(STATE_RESUME_WINDOW, mResumeWindow);
+        bundle.putLong(STATE_RESUME_POSITION, mResumePosition);
+        bundle.putParcelable(Constants.STEP_ARG, mStep);
+        bundle.putBoolean(PLAY_WHEN_READY, mExoPlayer.getPlayWhenReady());
+        outState.putAll(bundle);
         super.onSaveInstanceState(outState);
     }
 
     private void resumePlayer() {
+        if(mHasVideo) {
+            boolean haveResumePosition = mResumeWindow != C.INDEX_UNSET;
 
-        boolean haveResumePosition = mResumeWindow != C.INDEX_UNSET;
-
-        if (haveResumePosition) {
-            mPlayerView.getPlayer().seekTo(mResumeWindow, mResumePosition);
+            if (haveResumePosition) {
+                mPlayerView.getPlayer().seekTo(mResumeWindow, mResumePosition);
+            }
         }
     }
 

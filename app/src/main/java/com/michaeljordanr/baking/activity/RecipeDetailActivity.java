@@ -33,7 +33,7 @@ public class RecipeDetailActivity extends AppCompatActivity implements
     RecyclerView mStepsRecyclerView;
 
     private Recipe mRecipe;
-    private boolean mTwoPane;
+    private boolean mIsTablet;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -67,22 +67,20 @@ public class RecipeDetailActivity extends AppCompatActivity implements
             mStepsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         }
 
-        if (findViewById(R.id.step_detail_container) != null) {
-            mTwoPane = true;
-        }
+        mIsTablet = getResources().getBoolean(R.bool.isTablet);
 
-        if(mTwoPane){
+        if(mIsTablet){
             onClick(mRecipe.getSteps().get(0));
         }
     }
 
     @Override
     public void onClick(Step step) {
-        if(mTwoPane){
+        if(mIsTablet){
             getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.step_detail_container, StepDetailFragment.newInstance(
-                            new ArrayList<>(mRecipe.getSteps()), step.getId(), mTwoPane))
+                            new ArrayList<>(mRecipe.getSteps()), step.getId(), mIsTablet))
                     .addToBackStack(null)
                     .commit();
         }else {
