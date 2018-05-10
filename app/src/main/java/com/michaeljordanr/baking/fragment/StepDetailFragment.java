@@ -1,6 +1,7 @@
 package com.michaeljordanr.baking.fragment;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -48,6 +49,7 @@ public class StepDetailFragment extends Fragment {
     private static String STATE_RESUME_POSITION = "state_position";
     private static String PLAY_WHEN_READY = "play_when_ready";
     private static String HAS_VIDEO = "has_video";
+    private static String ORIENTATION_ID = "orientation_id";
 
     private int mResumeWindow = 0;
     private long mResumePosition = 0;
@@ -78,7 +80,9 @@ public class StepDetailFragment extends Fragment {
     private boolean mIsTablet;
     private boolean mHasVideo;
     private boolean mPlayWhenReady = true;
-    private boolean mDoNotLoad;
+    private boolean mFlagOnCreate;
+    private boolean mWasRotated;
+    private int mCurrentOrientation;
 
     private Step mStep;
 
@@ -115,6 +119,9 @@ public class StepDetailFragment extends Fragment {
             mPositionSelected = getArguments().getInt(Constants.STEP_LIST_POSITION_ARG);
             mIsTablet = getArguments().getBoolean(Constants.IS_TABLET_ARG);
         }
+
+        mCurrentOrientation = getResources().getConfiguration().orientation;
+
         Log.i("LIFECYCLE", "OnCreate");
     }
 
@@ -124,14 +131,23 @@ public class StepDetailFragment extends Fragment {
         super.onCreateView(inflater, container, savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_step_detail, container, false);
         unbinder = ButterKnife.bind(this, view);
-        setRetainInstance(true);
 
         if (savedInstanceState != null) {
+            mPositionSelected = savedInstanceState.getInt(Constants.STEP_LIST_POSITION_ARG);
             mResumeWindow = savedInstanceState.getInt(STATE_RESUME_WINDOW, mResumeWindow);
             mResumePosition = savedInstanceState.getLong(STATE_RESUME_POSITION, mResumePosition);
             mStep = savedInstanceState.getParcelable(Constants.STEP_ARG);
             mPlayWhenReady = savedInstanceState.getBoolean(PLAY_WHEN_READY, mPlayWhenReady);
             mHasVideo = savedInstanceState.getBoolean(HAS_VIDEO, false);
+            mCurrentOrientation = savedInstanceState.getInt(ORIENTATION_ID, mCurrentOrientation);
+        }
+
+        if(mCurrentOrientation != 0){
+            int orientation = getResources().getConfiguration().orientation;
+            mWasRotated = mCurrentOrientation != orientation;
+            mCurrentOrientation = orientation;
+        }else{
+            mWasRotated = false;
         }
 
         if(mIsTablet){
@@ -140,7 +156,7 @@ public class StepDetailFragment extends Fragment {
         }
 
         setupView();
-        mDoNotLoad = true;
+        mFlagOnCreate = true;
 
         Log.i("LIFECYCLE", "OnCreateView");
         return view;
@@ -211,6 +227,14 @@ public class StepDetailFragment extends Fragment {
                 if (playbackState == PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS) {
                     onPreviousStepClick();
                 }
+                if(playbackState == PlaybackStateCompat.STATE_PAUSED){
+                    mPlayWhenReady = playWhenReady;
+                }
+                if(playbackState == PlaybackStateCompat.STATE_PLAYING){
+                    mPlayWhenReady = playWhenReady;
+                }
+
+                mExoPlayer.setPlayWhenReady(mPlayWhenReady);
             }
 
             @Override
@@ -226,14 +250,13 @@ public class StepDetailFragment extends Fragment {
             mExoPlayer.release();
             mExoPlayer = null;
             mMediaSource = null;
-            mDoNotLoad = false;
         }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        if (mExoPlayer == null && mHasVideo && !mDoNotLoad) {
+        if (mHasVideo && (!mFlagOnCreate || mWasRotated)) {
             resumePlayer();
         }
         Log.i("LIFECYCLE", "OnResume");
@@ -253,17 +276,20 @@ public class StepDetailFragment extends Fragment {
     public void onStop() {
         super.onStop();
         releasePlayer();
+        mFlagOnCreate = false;
         Log.i("LIFECYCLE", "OnStop");
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         Bundle bundle = new Bundle();
+        bundle.putInt(Constants.STEP_LIST_POSITION_ARG, mPositionSelected);
         bundle.putInt(STATE_RESUME_WINDOW, mResumeWindow);
         bundle.putLong(STATE_RESUME_POSITION, mResumePosition);
         bundle.putParcelable(Constants.STEP_ARG, mStep);
-        bundle.putBoolean(PLAY_WHEN_READY, mExoPlayer.getPlayWhenReady());
+        bundle.putBoolean(PLAY_WHEN_READY, mExoPlayer != null && mExoPlayer.getPlayWhenReady());
         bundle.putBoolean(HAS_VIDEO, mHasVideo);
+        bundle.putInt(ORIENTATION_ID, mCurrentOrientation);
         outState.putAll(bundle);
         super.onSaveInstanceState(outState);
         Log.i("LIFECYCLE", "onSaveInstanceState");
@@ -273,7 +299,9 @@ public class StepDetailFragment extends Fragment {
         if(mHasVideo) {
             boolean haveResumePosition = mResumeWindow != C.INDEX_UNSET;
 
-            setupView();
+            if(mExoPlayer == null) {
+                setupView();
+            }
 
             if (haveResumePosition) {
                 mPlayerView.getPlayer().seekTo(mResumeWindow, mResumePosition);

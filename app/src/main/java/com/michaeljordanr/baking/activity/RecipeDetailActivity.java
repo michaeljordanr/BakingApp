@@ -70,7 +70,9 @@ public class RecipeDetailActivity extends AppCompatActivity implements
         mIsTablet = getResources().getBoolean(R.bool.isTablet);
 
         if(mIsTablet){
-            onClick(mRecipe.getSteps().get(0));
+            if(savedInstanceState == null) {
+                onClick(mRecipe.getSteps().get(0));
+            }
         }
     }
 

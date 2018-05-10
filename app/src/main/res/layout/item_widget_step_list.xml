@@ -11,16 +11,6 @@
     android:paddingRight="@dimen/material_2x"
     android:paddingTop="@dimen/material_1x">
 
-    <TextView
-        android:id="@+id/tv_id"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:background="@drawable/bg_circle_accent"
-        android:backgroundTint="@android:color/white"
-        android:gravity="center"
-        android:textColor="@color/colorAccent"
-        android:textStyle="bold"
-        tools:text="1" />
 
     <TextView
         android:id="@+id/tv_short_description"

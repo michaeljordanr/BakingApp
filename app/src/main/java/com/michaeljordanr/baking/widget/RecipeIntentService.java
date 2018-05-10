@@ -61,7 +61,7 @@ public class RecipeIntentService extends IntentService {
         protected List<Recipe> doInBackground(Void... voids) {
             URL recipesUrl;
             String jsonResponse;
-            List<Recipe> mRecipesList = new ArrayList<>();;
+            List<Recipe> mRecipesList = new ArrayList<>();
 
             boolean isNetworkAvailable = NetworkUtils.isNetworkAvailable(mContext);
 

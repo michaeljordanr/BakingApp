@@ -11,7 +11,9 @@ import android.view.View;
 import android.widget.RemoteViews;
 
 import com.michaeljordanr.baking.R;
+import com.michaeljordanr.baking.activity.RecipeDetailActivity;
 import com.michaeljordanr.baking.activity.StepDetailActivity;
+import com.michaeljordanr.baking.model.Ingredient;
 import com.michaeljordanr.baking.model.Recipe;
 import com.michaeljordanr.baking.model.Step;
 
@@ -40,8 +42,8 @@ public class RecipeWidgetProvider extends AppWidgetProvider {
         mRecipeList = recipeList;
     }
 
-    public static List<Step> getStepsFromRecipe() {
-        return mRecipeList.get(mPosition).getSteps();
+    public static List<Ingredient> getRecipeList() {
+        return mRecipeList.get(mPosition).getIngredients();
     }
 
     public static void updateAppWidgets(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds, int position) {
@@ -85,7 +87,7 @@ public class RecipeWidgetProvider extends AppWidgetProvider {
         views.setRemoteAdapter(R.id.lv_ingredients, adapterIntent);
 
         // template to handle the click listener for each item
-        Intent clickIntentTemplate = new Intent(context, StepDetailActivity.class);
+        Intent clickIntentTemplate = new Intent(context, RecipeDetailActivity.class);
         PendingIntent clickPendingIntentTemplate = TaskStackBuilder.create(context)
                 .addNextIntentWithParentStack(clickIntentTemplate)
                 .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);

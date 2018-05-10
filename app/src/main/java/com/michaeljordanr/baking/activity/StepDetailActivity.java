@@ -30,6 +30,8 @@ public class StepDetailActivity extends AppCompatActivity implements ToolbarCont
         setContentView(R.layout.step_detail_activity);
         ButterKnife.bind(this);
 
+        mIsTablet = getResources().getBoolean(R.bool.isTablet);
+
         if (getIntent().getExtras() != null) {
             mStepList = getIntent().getExtras().getParcelableArrayList(Constants.STEP_LIST_ARG);
             mPositionSelected = getIntent().getExtras().getInt(Constants.STEP_LIST_POSITION_ARG);
@@ -38,7 +40,7 @@ public class StepDetailActivity extends AppCompatActivity implements ToolbarCont
             getSupportFragmentManager()
                     .beginTransaction().add(
                             R.id.step_detail_container,
-                            StepDetailFragment.newInstance(mStepList, mPositionSelected, false))
+                            StepDetailFragment.newInstance(mStepList, mPositionSelected, mIsTablet))
                     .commit();
         }
 
@@ -57,8 +59,6 @@ public class StepDetailActivity extends AppCompatActivity implements ToolbarCont
             getSupportActionBar().setTitle(getResources().getString(R.string.step_title,
                     mStepList.get(mPositionSelected).getId()));
         }
-
-        mIsTablet = getResources().getBoolean(R.bool.isTablet);
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -77,4 +77,5 @@ public class StepDetailActivity extends AppCompatActivity implements ToolbarCont
             }
         }
     }
+
 }
