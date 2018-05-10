@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.widget.CardView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,9 +47,10 @@ public class StepDetailFragment extends Fragment {
     private static String STATE_RESUME_WINDOW = "state_resume";
     private static String STATE_RESUME_POSITION = "state_position";
     private static String PLAY_WHEN_READY = "play_when_ready";
+    private static String HAS_VIDEO = "has_video";
 
-    private int mResumeWindow;
-    private long mResumePosition;
+    private int mResumeWindow = 0;
+    private long mResumePosition = 0;
 
 
     private ToolbarControlListener mToolbarCallback;
@@ -75,7 +77,8 @@ public class StepDetailFragment extends Fragment {
     private Unbinder unbinder;
     private boolean mIsTablet;
     private boolean mHasVideo;
-    private boolean mPlayWhenReady;
+    private boolean mPlayWhenReady = true;
+    private boolean mDoNotLoad;
 
     private Step mStep;
 
@@ -112,6 +115,7 @@ public class StepDetailFragment extends Fragment {
             mPositionSelected = getArguments().getInt(Constants.STEP_LIST_POSITION_ARG);
             mIsTablet = getArguments().getBoolean(Constants.IS_TABLET_ARG);
         }
+        Log.i("LIFECYCLE", "OnCreate");
     }
 
     @Nullable
@@ -126,7 +130,8 @@ public class StepDetailFragment extends Fragment {
             mResumeWindow = savedInstanceState.getInt(STATE_RESUME_WINDOW, mResumeWindow);
             mResumePosition = savedInstanceState.getLong(STATE_RESUME_POSITION, mResumePosition);
             mStep = savedInstanceState.getParcelable(Constants.STEP_ARG);
-            mPlayWhenReady = savedInstanceState.getBoolean(PLAY_WHEN_READY, mExoPlayer.getPlayWhenReady());
+            mPlayWhenReady = savedInstanceState.getBoolean(PLAY_WHEN_READY, mPlayWhenReady);
+            mHasVideo = savedInstanceState.getBoolean(HAS_VIDEO, false);
         }
 
         if(mIsTablet){
@@ -135,6 +140,9 @@ public class StepDetailFragment extends Fragment {
         }
 
         setupView();
+        mDoNotLoad = true;
+
+        Log.i("LIFECYCLE", "OnCreateView");
         return view;
     }
 
@@ -168,11 +176,11 @@ public class StepDetailFragment extends Fragment {
 
         int cvVisibility = getResources().getInteger(R.integer.cv_description_visibility);
         if(mStep.getVideoUrl() == null || mStep.getVideoUrl().isEmpty()){
-            mHasVideo = true;
+            mHasVideo = false;
             mPlayerView.setVisibility(View.GONE);
             mDescriptionCardView.setVisibility(View.VISIBLE);
         }else {
-            mHasVideo = false;
+            mHasVideo = true;
             mDescriptionCardView.setVisibility(cvVisibility == View.VISIBLE ? View.VISIBLE : View.GONE);
             mPlayerView.setVisibility(View.VISIBLE);
             startPlayer();
@@ -216,36 +224,36 @@ public class StepDetailFragment extends Fragment {
     private void releasePlayer(){
         if(mExoPlayer != null){
             mExoPlayer.release();
+            mExoPlayer = null;
+            mMediaSource = null;
+            mDoNotLoad = false;
         }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        if(!mIsTablet) {
-            if (mPlayerView == null) {
-                setupView();
-            } else {
-                startPlayer();
-                resumePlayer();
-            }
+        if (mExoPlayer == null && mHasVideo && !mDoNotLoad) {
+            resumePlayer();
         }
+        Log.i("LIFECYCLE", "OnResume");
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if (mPlayerView != null && mPlayerView.getPlayer() != null) {
+        if (mExoPlayer != null) {
             mResumeWindow = mPlayerView.getPlayer().getCurrentWindowIndex();
             mResumePosition = Math.max(0, mPlayerView.getPlayer().getContentPosition());
-            releasePlayer();
         }
+        Log.i("LIFECYCLE", "onPause");
     }
 
     @Override
     public void onStop() {
         super.onStop();
         releasePlayer();
+        Log.i("LIFECYCLE", "OnStop");
     }
 
     @Override
@@ -255,17 +263,22 @@ public class StepDetailFragment extends Fragment {
         bundle.putLong(STATE_RESUME_POSITION, mResumePosition);
         bundle.putParcelable(Constants.STEP_ARG, mStep);
         bundle.putBoolean(PLAY_WHEN_READY, mExoPlayer.getPlayWhenReady());
+        bundle.putBoolean(HAS_VIDEO, mHasVideo);
         outState.putAll(bundle);
         super.onSaveInstanceState(outState);
+        Log.i("LIFECYCLE", "onSaveInstanceState");
     }
 
     private void resumePlayer() {
         if(mHasVideo) {
             boolean haveResumePosition = mResumeWindow != C.INDEX_UNSET;
 
+            setupView();
+
             if (haveResumePosition) {
                 mPlayerView.getPlayer().seekTo(mResumeWindow, mResumePosition);
             }
+            Log.i("LIFECYCLE", "resumePlayer");
         }
     }
 
